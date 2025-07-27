@@ -1,66 +1,198 @@
 networks:
-  sitea_net: {}
-  siteb_net: {}
+  sitea_net:
+    driver: bridge
+    labels:
+      - "opal-lab.network=sitea"
+  siteb_net:
+    driver: bridge
+    labels:
+      - "opal-lab.network=siteb"
 
 volumes:
   sitea_mongo_data:
+    labels:
+      - "opal-lab.volume=sitea-mongo"
   siteb_mongo_data:
+    labels:
+      - "opal-lab.volume=siteb-mongo"
 
 services:
-  ############### SITE A ###############
+  ############### SITE A ###############
   sitea_mongo:
     image: mongo:6
-    volumes: [ sitea_mongo_data:/data/db ]
-    networks: [ sitea_net ]
+    container_name: opal-lab-sitea-mongo
+    restart: unless-stopped
+    volumes:
+      - sitea_mongo_data:/data/db
+    networks:
+      - sitea_net
+    labels:
+      - "opal-lab.service=database"
+      - "opal-lab.site=sitea"
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   sitea_rock:
     image: datashield/rock-base:latest
+    container_name: opal-lab-sitea-rock
+    restart: unless-stopped
     environment:
-      ROCK_ADMINISTRATOR_PASSWORD: ${SITEA_ROCK_ADMIN_PWD}
-    networks: [ sitea_net ]
+      ROCK_ADMINISTRATOR_PASSWORD: ${SITEA_ROCK_ADMIN_PWD:-rockadmin}
+    networks:
+      - sitea_net
+    labels:
+      - "opal-lab.service=rock"
+      - "opal-lab.site=sitea"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
   sitea_opal:
     image: obiba/opal:latest
-    depends_on: [ sitea_mongo, sitea_rock ]
-    ports: [ "${OPAL_PORT_A}:8080" ]
+    container_name: opal-lab-sitea-opal
+    restart: unless-stopped
+    depends_on:
+      sitea_mongo:
+        condition: service_healthy
+      sitea_rock:
+        condition: service_healthy
+    ports:
+      - "${OPAL_PORT_A:-18880}:8080"        # HTTP (per backward compatibility)
+      - "${OPAL_HTTPS_PORT_A:-18443}:8443"  # HTTPS
     environment:
       MONGO_HOST: sitea_mongo
       MONGO_PORT: 27017
       ROCK_HOSTS: sitea_rock:8085
       OPAL_ADMINISTRATOR_PASSWORD: ${SITEA_OPAL_ADMIN_PWD}
+      JAVA_OPTS: "-Xmx2g"
+      # Configurazione SSL - keystore specifico per Site A
+      OPAL_HTTPS_PORT: 8443
+      OPAL_SSL_KEYSTORE_FILE: /srv/ssl/sitea-keystore.p12
+      OPAL_SSL_KEYSTORE_PASSWORD: ${SSL_KEYSTORE_PASSWORD:-opalssl}
+      OPAL_SSL_KEYSTORE_TYPE: PKCS12
+      # Forza HTTPS per connessioni sicure
+      OPAL_HTTPS_ONLY: true
     volumes:
       - "${PROJECT_HOME}/sitea/opal_home:/srv"
-    networks: [ sitea_net ]
+      - "${PROJECT_HOME}/ssl:/srv/ssl"
+    networks:
+      - sitea_net
+    labels:
+      - "opal-lab.service=opal"
+      - "opal-lab.site=sitea"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "-k", "https://localhost:8443/"]  # -k ignora certificati self-signed
+      interval: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 120s
 
-  ############### SITE B ###############
+  ############### SITE B ###############
   siteb_mongo:
     image: mongo:6
-    volumes: [ siteb_mongo_data:/data/db ]
-    networks: [ siteb_net ]
+    container_name: opal-lab-siteb-mongo
+    restart: unless-stopped
+    volumes:
+      - siteb_mongo_data:/data/db
+    networks:
+      - siteb_net
+    labels:
+      - "opal-lab.service=database"
+      - "opal-lab.site=siteb"
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   siteb_rock:
     image: datashield/rock-base:latest
+    container_name: opal-lab-siteb-rock
+    restart: unless-stopped
     environment:
-      OPAL_ADMINISTRATOR_PASSWORD: ${SITEB_ROCK_ADMIN_PWD}
-    networks: [ siteb_net ]
+      ROCK_ADMINISTRATOR_PASSWORD: ${SITEB_ROCK_ADMIN_PWD:-rockadmin}
+    networks:
+      - siteb_net
+    labels:
+      - "opal-lab.service=rock"
+      - "opal-lab.site=siteb"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
   siteb_opal:
     image: obiba/opal:latest
-    depends_on: [ siteb_mongo, siteb_rock ]
-    ports: [ "${OPAL_PORT_B}:8080" ]
+    container_name: opal-lab-siteb-opal
+    restart: unless-stopped
+    depends_on:
+      siteb_mongo:
+        condition: service_healthy
+      siteb_rock:
+        condition: service_healthy
+    ports:
+      - "${OPAL_PORT_B:-28880}:8080"        # HTTP (per backward compatibility)
+      - "${OPAL_HTTPS_PORT_B:-28443}:8443"  # HTTPS
     environment:
       MONGO_HOST: siteb_mongo
       MONGO_PORT: 27017
       ROCK_HOSTS: siteb_rock:8085
       OPAL_ADMINISTRATOR_PASSWORD: ${SITEB_OPAL_ADMIN_PWD}
+      JAVA_OPTS: "-Xmx2g"
+      # Configurazione SSL - keystore specifico per Site B
+      OPAL_HTTPS_PORT: 8443
+      OPAL_SSL_KEYSTORE_FILE: /srv/ssl/siteb-keystore.p12
+      OPAL_SSL_KEYSTORE_PASSWORD: ${SSL_KEYSTORE_PASSWORD:-opalssl}
+      OPAL_SSL_KEYSTORE_TYPE: PKCS12
+      # Forza HTTPS per connessioni sicure
+      OPAL_HTTPS_ONLY: true
     volumes:
       - "${PROJECT_HOME}/siteb/opal_home:/srv"
-    networks: [ siteb_net ]
+      - "${PROJECT_HOME}/ssl:/srv/ssl"
+    networks:
+      - siteb_net
+    labels:
+      - "opal-lab.service=opal"
+      - "opal-lab.site=siteb"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "-k", "https://localhost:8443/"]  # -k ignora certificati self-signed
+      interval: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 120s
 
   ############### CLIENT ###############
   ds_client:
     image: rocker/verse:latest
-    ports: [ "${RSTUDIO_PORT}:8787" ]
+    container_name: opal-lab-rstudio-client
+    restart: unless-stopped
+    ports:
+      - "${RSTUDIO_PORT:-8787}:8787"
     environment:
       PASSWORD: ${CLIENT_VERSE_RSTUDIO_PWD}
-    networks: [ sitea_net, siteb_net ]
+      DISABLE_AUTH: false
+      ROOT: true
+    volumes:
+      - "${PROJECT_HOME}/client:/home/rstudio"
+    networks:
+      - sitea_net
+      - siteb_net
+    labels:
+      - "opal-lab.service=client"
+      - "opal-lab.component=rstudio"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8787/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
