@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 #
 # Script per importare i dati di esempio in entrambi i siti Opal
-# Da eseguire in RStudio dopo aver avviato i servizi Docker
+# Supporta sia HTTP che HTTPS con fallback automatico
 #
 
 library(opalr)
@@ -9,45 +9,100 @@ library(glue)
 library(getPass)
 library(usethis)
 
-ui_info("Setup dati demo per opal-lab (HTTPS)")
+ui_info("Setup dati demo per opal-lab")
 
-# Configurazione HTTPS
-SITEA_URL <- "https://sitea_opal:8443"
-SITEB_URL <- "https://siteb_opal:8443"
+# Configurazione URL con fallback automatico
+get_opal_urls <- function() {
+  # Prova prima le variabili d'ambiente (preferite)
+  sitea_url <- Sys.getenv("SITEA_OPAL_URL", "https://sitea_opal:8443")
+  siteb_url <- Sys.getenv("SITEB_OPAL_URL", "https://siteb_opal:8443")
+
+  list(sitea = sitea_url, siteb = siteb_url)
+}
+
+# Funzione per testare e fare fallback HTTP se necessario
+get_working_url <- function(https_url) {
+  http_url <- gsub("https://", "http://", gsub(":8443", ":8080", https_url))
+
+  # Test HTTPS prima
+  ui_todo("Test HTTPS: {https_url}")
+  if (grepl("https://", https_url)) {
+    tryCatch({
+      response <- httr::GET(https_url, httr::config(ssl_verifypeer = FALSE))
+      if (httr::status_code(response) < 400) {
+        ui_done("HTTPS disponibile")
+        return(list(url = https_url, use_ssl = TRUE))
+      }
+    }, error = function(e) {
+      ui_info("HTTPS non raggiungibile, provo HTTP...")
+    })
+  }
+
+  # Fallback HTTP
+  ui_todo("Test HTTP: {http_url}")
+  tryCatch({
+    response <- httr::GET(http_url)
+    if (httr::status_code(response) < 400) {
+      ui_done("HTTP disponibile")
+      return(list(url = http_url, use_ssl = FALSE))
+    }
+  }, error = function(e) {
+    ui_oops("Nessuna connessione disponibile per {https_url}")
+    return(NULL)
+  })
+}
 
 # Leggi le password dalle variabili d'ambiente
-SITEA_PWD <- Sys.getenv(
-  "SITEA_OPAL_ADMIN_PWD",
-  getPass::getPass("Inserisci la password per Sito A: ")
-)
-SITEB_PWD <- Sys.getenv(
-  "SITEB_OPAL_ADMIN_PWD",
-  getPass::getPass("Inserisci la password per Sito B: ")
-)
+SITEA_PWD <- Sys.getenv("SITEA_OPAL_ADMIN_PWD")
+SITEB_PWD <- Sys.getenv("SITEB_OPAL_ADMIN_PWD")
 
 if (SITEA_PWD == "" || SITEB_PWD == "") {
   ui_oops("Password non trovate nelle variabili d'ambiente")
   ui_info("Assicurati che il file .env sia configurato correttamente")
-  stop("Password mancanti")
+
+  # Fallback interattivo
+  if (SITEA_PWD == "") {
+    SITEA_PWD <- getPass::getPass("Inserisci la password per Site A: ")
+  }
+  if (SITEB_PWD == "") {
+    SITEB_PWD <- getPass::getPass("Inserisci la password per Site B: ")
+  }
+}
+
+# Determina URL funzionanti
+urls <- get_opal_urls()
+sitea_config <- get_working_url(urls$sitea)
+siteb_config <- get_working_url(urls$siteb)
+
+if (is.null(sitea_config) || is.null(siteb_config)) {
+  ui_oops("Impossibile connettersi ai server Opal")
+  ui_info("Verifica che i servizi Docker siano avviati: docker compose ps")
+  stop("Connessione fallita")
 }
 
 # Funzione per configurare un singolo sito
-setup_site <- function(site_name, url, password) {
+setup_site <- function(site_name, config, password) {
   ui_todo("Configurazione {site_name}...")
 
   tryCatch({
-    # Connessione con HTTPS e certificati self-signed
-    # Nota: opalr deve essere configurato per accettare certificati self-signed
+    # Configurazione connessione
+    opts <- list()
+    if (config$use_ssl) {
+      opts$ssl.verifyhost <- 0  # Ignora verifica hostname
+      opts$ssl.verifypeer <- 0  # Ignora verifica certificato
+      ui_info("Usando HTTPS con certificati self-signed")
+    } else {
+      ui_info("Usando HTTP")
+    }
+
+    # Connessione
     opal <- opal.login(
       username = "administrator",
       password = password,
-      url = url,
-      opts = list(
-        ssl.verifyhost = 0,  # Ignora verifica hostname
-        ssl.verifypeer = 0   # Ignora verifica certificato
-      )
+      url = config$url,
+      opts = opts
     )
-    ui_done("Connessione HTTPS riuscita")
+    ui_done("Connessione riuscita a {config$url}")
 
     # Verifica se il progetto LAB esiste già
     progetti <- opal.projects(opal)
@@ -65,6 +120,7 @@ setup_site <- function(site_name, url, password) {
       ui_info("Tabella dataset già esistente")
     } else {
       # Importa il file CSV
+      ui_todo("Importazione dati CSV...")
       opal.file_upload(opal, "/srv/data/dataset.csv", "/tmp/dataset.csv")
       opal.table_import(
         opal,
@@ -88,19 +144,18 @@ setup_site <- function(site_name, url, password) {
     ui_oops("Errore durante la configurazione di {site_name}: {e$message}")
     ui_info("Suggerimenti:")
     ui_info("- Verifica che i servizi Docker siano avviati")
-    ui_info("- Controlla che i certificati SSL siano configurati correttamente")
-    ui_info("- Se il problema persiste, prova con HTTP temporaneamente")
+    ui_info("- Controlla le password nel file .env")
+    ui_info("- Assicurati che i file dataset.csv esistano nella directory data/")
   })
 }
 
-# Verifica connessione ai servizi prima di procedere
-ui_todo("Verifica connessione ai servizi...")
-
 # Configura entrambi i siti
-setup_site("Site A", SITEA_URL, SITEA_PWD)
-setup_site("Site B", SITEB_URL, SITEB_PWD)
+setup_site("Site A", sitea_config, SITEA_PWD)
+setup_site("Site B", siteb_config, SITEB_PWD)
 
 ui_done("Setup completato!")
-ui_info("I dati sono stati importati usando connessioni HTTPS")
-ui_info("Ora puoi eseguire analisi federate usando la tabella LAB.dataset")
-ui_info("Per testare: {ui_code('source(\"scripts/demo-analysis.R\")')}")
+ui_info("Configurazione utilizzata:")
+ui_info("- Site A: {sitea_config$url}")
+ui_info("- Site B: {siteb_config$url}")
+ui_info("I dati sono stati importati nella tabella LAB.dataset")
+ui_info("Per testare: {ui_code('source(\"demo-analysis.R\")')}")

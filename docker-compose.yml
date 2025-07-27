@@ -64,7 +64,7 @@ services:
       sitea_rock:
         condition: service_healthy
     ports:
-      - "${OPAL_PORT_A:-18880}:8080"        # HTTP (per backward compatibility)
+      - "${OPAL_PORT_A:-18880}:8080"        # HTTP
       - "${OPAL_HTTPS_PORT_A:-18443}:8443"  # HTTPS
     environment:
       MONGO_HOST: sitea_mongo
@@ -72,23 +72,24 @@ services:
       ROCK_HOSTS: sitea_rock:8085
       OPAL_ADMINISTRATOR_PASSWORD: ${SITEA_OPAL_ADMIN_PWD}
       JAVA_OPTS: "-Xmx2g"
-      # Configurazione SSL - keystore specifico per Site A
+      # Configurazione SSL condizionale
       OPAL_HTTPS_PORT: 8443
       OPAL_SSL_KEYSTORE_FILE: /srv/ssl/sitea-keystore.p12
       OPAL_SSL_KEYSTORE_PASSWORD: ${SSL_KEYSTORE_PASSWORD:-opalssl}
       OPAL_SSL_KEYSTORE_TYPE: PKCS12
-      # Forza HTTPS per connessioni sicure
-      OPAL_HTTPS_ONLY: true
+      # NON forza HTTPS - permette anche HTTP per backward compatibility
+      OPAL_HTTPS_ONLY: ${OPAL_FORCE_HTTPS:-false}
     volumes:
       - "${PROJECT_HOME}/sitea/opal_home:/srv"
-      - "${PROJECT_HOME}/ssl:/srv/ssl"
+      - "${PROJECT_HOME}/ssl:/srv/ssl:ro"  # Read-only per sicurezza
     networks:
       - sitea_net
     labels:
       - "opal-lab.service=opal"
       - "opal-lab.site=sitea"
     healthcheck:
-      test: ["CMD", "curl", "-f", "-k", "https://localhost:8443/"]  # -k ignora certificati self-signed
+      # Controlla prima HTTPS, poi HTTP come fallback
+      test: ["CMD", "sh", "-c", "curl -f -k https://localhost:8443/ || curl -f http://localhost:8080/"]
       interval: 30s
       timeout: 15s
       retries: 5
@@ -141,7 +142,7 @@ services:
       siteb_rock:
         condition: service_healthy
     ports:
-      - "${OPAL_PORT_B:-28880}:8080"        # HTTP (per backward compatibility)
+      - "${OPAL_PORT_B:-28880}:8080"        # HTTP
       - "${OPAL_HTTPS_PORT_B:-28443}:8443"  # HTTPS
     environment:
       MONGO_HOST: siteb_mongo
@@ -149,23 +150,24 @@ services:
       ROCK_HOSTS: siteb_rock:8085
       OPAL_ADMINISTRATOR_PASSWORD: ${SITEB_OPAL_ADMIN_PWD}
       JAVA_OPTS: "-Xmx2g"
-      # Configurazione SSL - keystore specifico per Site B
+      # Configurazione SSL condizionale
       OPAL_HTTPS_PORT: 8443
       OPAL_SSL_KEYSTORE_FILE: /srv/ssl/siteb-keystore.p12
       OPAL_SSL_KEYSTORE_PASSWORD: ${SSL_KEYSTORE_PASSWORD:-opalssl}
       OPAL_SSL_KEYSTORE_TYPE: PKCS12
-      # Forza HTTPS per connessioni sicure
-      OPAL_HTTPS_ONLY: true
+      # NON forza HTTPS - permette anche HTTP per backward compatibility
+      OPAL_HTTPS_ONLY: ${OPAL_FORCE_HTTPS:-false}
     volumes:
       - "${PROJECT_HOME}/siteb/opal_home:/srv"
-      - "${PROJECT_HOME}/ssl:/srv/ssl"
+      - "${PROJECT_HOME}/ssl:/srv/ssl:ro"  # Read-only per sicurezza
     networks:
       - siteb_net
     labels:
       - "opal-lab.service=opal"
       - "opal-lab.site=siteb"
     healthcheck:
-      test: ["CMD", "curl", "-f", "-k", "https://localhost:8443/"]  # -k ignora certificati self-signed
+      # Controlla prima HTTPS, poi HTTP come fallback
+      test: ["CMD", "sh", "-c", "curl -f -k https://localhost:8443/ || curl -f http://localhost:8080/"]
       interval: 30s
       timeout: 15s
       retries: 5
@@ -182,8 +184,13 @@ services:
       PASSWORD: ${CLIENT_VERSE_RSTUDIO_PWD}
       DISABLE_AUTH: false
       ROOT: true
+      # Variabili d'ambiente per R client SSL
+      SITEA_OPAL_ADMIN_PWD: ${SITEA_OPAL_ADMIN_PWD}
+      SITEB_OPAL_ADMIN_PWD: ${SITEB_OPAL_ADMIN_PWD}
+      SSL_KEYSTORE_PASSWORD: ${SSL_KEYSTORE_PASSWORD:-opalssl}
     volumes:
       - "${PROJECT_HOME}/client:/home/rstudio"
+      - "${PROJECT_HOME}/ssl:/home/rstudio/ssl:ro"  # Certificati accessibili al client R
     networks:
       - sitea_net
       - siteb_net

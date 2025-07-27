@@ -26,7 +26,8 @@ packages <- c(
   "glue",
   "dplyr",
   "ggplot2",
-  "getPass"
+  "getPass",
+  "httr"  # Necessario per test connessioni HTTP/HTTPS
 )
 
 # Installazione con pak
@@ -34,7 +35,7 @@ ui_todo("Installando {length(packages)} pacchetti...")
 pak::pkg_install(packages)
 
 # Verifica installazione
-required_libs <- c("opalr", "DSI", "DSOpal", "dsBaseClient", "glue", "dplyr", "ggplot2", "getPass")
+required_libs <- c("opalr", "DSI", "DSOpal", "dsBaseClient", "glue", "dplyr", "ggplot2", "getPass", "httr")
 success <- sapply(required_libs, require, character.only = TRUE, quietly = TRUE)
 
 if (all(success)) {

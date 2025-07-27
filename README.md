@@ -3,230 +3,109 @@
 [![Docker Compose](https://img.shields.io/badge/docker--compose-supported-blue.svg)](https://docs.docker.com/compose/)
 [![DataSHIELD](https://img.shields.io/badge/DataSHIELD-compatible-green.svg)](https://www.datashield.org/)
 [![Opal](https://img.shields.io/badge/Opal-4.x-orange.svg)](https://www.obiba.org/pages/products/opal/)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Laboratorio didattico per sperimentare l'analisi federata di dati con DataSHIELD. Questo repository fornisce un ambiente Docker completo con due server Opal simulati (Site A e Site B) e un client R per l'analisi.
+**Ambiente Docker per sperimentare l'analisi federata con DataSHIELD**
 
-**DataSHIELD** permette di analizzare dati distribuiti senza spostarli dai siti dove sono custoditi, garantendo privacy e conformità alle normative.
+Questo repository fornisce un ambiente completo con due server Opal simulati (Site A e Site B) e un client R per l'analisi federata. DataSHIELD permette di analizzare dati distribuiti senza spostarli dai siti originali.
 
-**🔐 SSL/HTTPS**: L'ambiente supporta connessioni sicure con certificati self-signed multi-dominio per simulare un ambiente di produzione.
-
-## 📋 Contenuto del repository
-
-```
-opal-lab/
-├── docker-compose.yml              # Definizione dei servizi Docker
-├── .env.example                    # Template per le variabili d'ambiente
-├── ssl/
-│   └── generate-certs.ps1          # 🔐 Generazione certificati SSL multi-dominio
-├── sitea/opal_home/data/
-│   └── dataset.csv                 # Dati di esempio per Site A
-├── siteb/opal_home/data/
-│   └── dataset.csv                 # Dati di esempio per Site B
-├── scripts/
-│   ├── setup-demo-data.R           # Script per importare dati di esempio
-│   ├── demo-analysis.R             # Script per demo analisi federata
-│   └── install-packages.R          # Installazione automatica pacchetti R
-└── README.md                       # Questa documentazione
-```
-
-## 🔧 Prerequisiti
-
-- **Docker Desktop** installato e funzionante
-- **4 GB di RAM** disponibili per Docker
-- **OpenSSL** per generazione certificati SSL
-- Browser web per accedere alle interfacce
-
-### Verifica Docker
+## 🚀 Setup rapido (3 comandi)
 
 ```bash
-docker --version
-docker compose version
-```
-
-### Installazione OpenSSL
-
-**Windows:**
-```powershell
-# Con Chocolatey (da PowerShell come amministratore)
-choco install openssl
-
-# Oppure scarica da: https://slproweb.com/products/Win32OpenSSL.html
-```
-
-**Linux:**
-```bash
-# Ubuntu/Debian
-sudo apt-get install openssl
-
-# CentOS/RHEL
-sudo yum install openssl
-```
-
-**macOS:**
-```bash
-# Con Homebrew
-brew install openssl
-```
-
-## ⚙️ Configurazione rapida
-
-### 1. Clona il repository
-
-```bash
+# 1. Clona il repository
 git clone https://github.com/CorradoLanera/opal-lab.git
 cd opal-lab
-```
 
-### 2. Configura le variabili d'ambiente
+# 2. Setup automatico (crea .env, directory, certificati SSL)
+./setup.sh
 
-```bash
-# Copia il template
-cp .env.example .env
-
-# Apri il file per modificarlo
-# Windows: notepad .env
-# Linux/macOS: nano .env
-```
-
-**Configura almeno queste variabili nel file `.env`:**
-
-```env
-PROJECT_HOME=C:/opal-lab               # Windows
-# PROJECT_HOME=/opt/opal-lab           # Linux/macOS
-
-SITEA_OPAL_ADMIN_PWD=TuaPasswordSiteA  # Password amministratore Site A
-SITEB_OPAL_ADMIN_PWD=TuaPasswordSiteB  # Password amministratore Site B
-CLIENT_VERSE_RSTUDIO_PWD=TuaPasswordR  # Password per RStudio
-```
-
-> ⚠️ **Importante**: Usa password forti (minimo 8 caratteri con lettere, numeri e simboli)
-
-### 3. Setup SSL completo (un solo comando!)
-
-```powershell
-# Windows PowerShell
-.\setup-ssl.ps1
-```
-
-Questo comando automaticamente:
-
-- ✅ Genera certificati SSL multi-dominio (funzionano per container + localhost)
-- ✅ Crea keystore PKCS12 per ogni sito Opal
-- ✅ Copia tutto nella directory `$PROJECT_HOME/ssl`
-- ✅ Verifica la configurazione `.env`
-- ✅ Fornisce istruzioni per i passi successivi
-
-> 💡 **Multi-dominio**: I certificati supportano sia i nomi container (`sitea_opal`, `siteb_opal`) che `localhost` per accesso diretto dal browser.green.svg)](https://www.datashield.org/)
-
-### 4. Crea le directory per i dati
-
-```bash
-# Windows PowerShell
-mkdir C:\opal-lab\sitea\opal_home\data, C:\opal-lab\siteb\opal_home\data, C:\opal-lab\client
-
-# Linux/macOS
-mkdir -p /opt/opal-lab/{sitea,siteb,client}/opal_home/data
-```
-
-### 5. Copia i dati di esempio e gli script
-
-```bash
-# Windows PowerShell
-copy sitea\opal_home\data\dataset.csv C:\opal-lab\sitea\opal_home\data\
-copy siteb\opal_home\data\dataset.csv C:\opal-lab\siteb\opal_home\data\
-copy scripts\*.R C:\opal-lab\client\
-
-# Linux/macOS
-cp sitea/opal_home/data/dataset.csv /opt/opal-lab/sitea/opal_home/data/
-cp siteb/opal_home/data/dataset.csv /opt/opal-lab/siteb/opal_home/data/
-cp scripts/*.R /opt/opal-lab/client/
-```
-
-## 🚀 Avvio dell'ambiente
-
-### Avvia tutti i servizi
-
-```bash
+# 3. Avvia i servizi
 docker compose up -d
 ```
 
-La prima volta scaricherà le immagini Docker (circa 2-3 GB). Al termine avrai:
-
-- **🔐 Site A Opal**: https://localhost:18443 (HTTPS sicuro)
-- **🔐 Site B Opal**: https://localhost:28443 (HTTPS sicuro)
+Dopo 2-3 minuti avrai tutto pronto:
 - **RStudio**: http://localhost:8787
+- **Site A**: https://localhost:18443 (HTTPS) o http://localhost:18880 (HTTP)
+- **Site B**: https://localhost:28443 (HTTPS) o http://localhost:28880 (HTTP)
 
-> 💡 **Nota SSL**: I certificati sono self-signed per sviluppo. Il browser mostrerà un avviso di sicurezza - clicca "Procedi comunque" o "Advanced → Proceed to localhost".
+## 📋 Requisiti
 
-### Verifica che tutto funzioni
+- **Docker Desktop** (4 GB RAM disponibili)
+- **Git**
+- **OpenSSL** (per certificati SSL, opzionale)
+
+**Verifica Docker:**
+```bash
+docker --version && docker compose version
+```
+
+## ⚙️ Configurazione dettagliata
+
+### 1. File .env
+
+Il setup automatico crea il file `.env`, ma devi configurare le password:
 
 ```bash
-docker compose ps
+# Apri .env e sostituisci <inserisci-password-*> con password reali
+nano .env  # Linux/macOS
+notepad .env  # Windows
 ```
 
-Dovresti vedere tutti i servizi in stato "healthy".
+**Configurazioni principali:**
+```env
+PROJECT_HOME=C:/opal-lab  # Windows: C:/opal-lab, Linux: /opt/opal-lab
 
-## 📊 Importazione dei dati
+# Password (OBBLIGATORIE)
+SITEA_OPAL_ADMIN_PWD=password123
+SITEB_OPAL_ADMIN_PWD=password456
+CLIENT_VERSE_RSTUDIO_PWD=rstudio123
 
-### Metodo 1: Script automatico R
+# SSL (opzionale)
+OPAL_FORCE_HTTPS=false  # true = solo HTTPS, false = HTTP + HTTPS
+```
 
-Accedi a RStudio (http://localhost:8787) con:
-- **Username**: `rstudio`
-- **Password**: quella configurata in `CLIENT_VERSE_RSTUDIO_PWD`
+### 2. Directory del progetto
 
-Nel terminale R di RStudio esegui:
+Il setup automatico crea:
+```
+$PROJECT_HOME/
+├── sitea/opal_home/data/dataset.csv
+├── siteb/opal_home/data/dataset.csv
+├── client/  (script R)
+└── ssl/     (certificati SSL)
+```
+
+## 📊 Importazione e analisi dati
+
+### RStudio (raccomandato)
+
+1. Vai su http://localhost:8787
+2. Login: `rstudio` / password dal `.env`
+3. Esegui in sequenza:
 
 ```r
-# Prima installa i pacchetti necessari
+# Installa pacchetti necessari
 source("install-packages.R")
 
-# Poi importa i dati (ora con supporto HTTPS!)
+# Importa dati di esempio (HTTP/HTTPS automatico)
 source("setup-demo-data.R")
 
-# Infine esegui l'analisi demo (opzionale)
-source("demo-analysis.R")
-```
-
-### Metodo 2: Interfaccia web manuale
-
-Per ogni sito (Site A e Site B):
-
-1. Apri il browser e vai su https://localhost:18443 (Site A) o https://localhost:28443 (Site B)
-2. **Accetta l'avviso SSL** (certificato self-signed per sviluppo)
-3. Login con:
-   - **Username**: `administrator`
-   - **Password**: quella configurata nel `.env`
-4. Vai su **Projects** → **Add Project**
-5. Nome progetto: `LAB`
-6. Vai su **Tables** → **Import**
-7. Seleziona il file CSV: `/srv/data/dataset.csv`
-8. Segui il wizard per completare l'importazione
-
-## 🔬 Analisi federata con DataSHIELD
-
-### Demo automatica
-
-In RStudio, esegui lo script di demo:
-
-```r
+# Analisi federata demo
 source("demo-analysis.R")
 ```
 
 ### Analisi manuale passo-passo
 
 ```r
-# 1. Carica le librerie necessarie
 library(DSI)
 library(DSOpal)
 library(dsBaseClient)
 
-# 2. Configura le connessioni ai due siti (ora con HTTPS!)
+# Connessione automatica con fallback HTTP/HTTPS
 login_data <- data.frame(
   server = c("siteA", "siteB"),
   url = c(
-    "https://sitea_opal:8443",
-    "https://siteb_opal:8443"
+    Sys.getenv("SITEA_OPAL_URL", "https://sitea_opal:8443"),
+    Sys.getenv("SITEB_OPAL_URL", "https://siteb_opal:8443")
   ),
   user = c("administrator", "administrator"),
   password = c(
@@ -238,21 +117,114 @@ login_data <- data.frame(
   stringsAsFactors = FALSE
 )
 
-# 3. Connetti ai siti e carica i dati
+# Connetti e analizza
 conns <- datashield.login(logins = login_data, assign = TRUE)
-
-# 4. Esegui analisi federate (i dati rimangono sui siti remoti!)
 ds.mean("D$age")                    # Media età
-ds.var("D$bmi")                     # Varianza BMI
 ds.table("D$gender")                # Distribuzione genere
-
-# 5. Modello federato
 model <- ds.glm("bmi ~ age + gender", data = "D", family = "gaussian")
-summary(model)
-
-# 6. Chiudi le connessioni
 datashield.logout(conns)
 ```
+
+## 🔧 Risoluzione problemi
+
+### Servizi non si avviano
+
+```bash
+# Verifica configurazione
+docker compose config
+
+# Controlla log
+docker compose logs sitea_opal
+docker compose logs siteb_opal
+```
+
+**Soluzioni comuni:**
+- File `.env` non configurato → Esegui `./setup.sh`
+- Directory `PROJECT_HOME` non esiste → Creala manualmente
+- Porte occupate → Cambia porte nel `.env`
+- Memoria insufficiente → Libera RAM per Docker
+
+### Errori SSL/certificati
+
+**Problema:** "SSL handshake failed" o "certificate unknown"
+
+**Soluzioni:**
+1. **Usa HTTP temporaneamente**: Modifica `.env`:
+   ```env
+   SITEA_OPAL_URL=http://sitea_opal:8080
+   SITEB_OPAL_URL=http://siteb_opal:8080
+   ```
+
+2. **Rigenera certificati**:
+   ```bash
+   cd ssl
+   ./generate-certs.sh
+   ./setup-keystore.sh
+   docker compose restart
+   ```
+
+3. **Forza HTTPS**: Nel `.env` usa `OPAL_FORCE_HTTPS=true`
+
+### Errori connessione DataSHIELD
+
+**Problema:** `datashield.login()` fallisce
+
+**Verifiche:**
+1. Servizi avviati? `docker compose ps` (tutti devono essere "healthy")
+2. Dati importati? Esegui `source("setup-demo-data.R")`
+3. Password corrette nel `.env`?
+4. URL corretti? Gli script usano fallback automatico HTTP/HTTPS
+
+### Tabelle non trovate
+
+**Problema:** "Table LAB.dataset not found"
+
+**Soluzioni:**
+- Reimporta dati: `source("setup-demo-data.R")`
+- Verifica via web: https://localhost:18443 → Projects → LAB
+- Controlla file CSV in `$PROJECT_HOME/*/opal_home/data/`
+
+## 🔐 Note SSL/HTTPS
+
+L'ambiente funziona sia con HTTP che HTTPS:
+
+- **HTTP** (semplice): Funziona sempre, meno sicuro
+- **HTTPS** (raccomandato): Certificati self-signed per sviluppo
+- **Fallback automatico**: Gli script provano HTTPS, poi HTTP
+
+Per **produzione** usa certificati CA verificati e credenziali sicure.
+
+## 📚 Struttura repository
+
+```
+opal-lab/
+├── docker-compose.yml      # Configurazione servizi
+├── .env.example           # Template configurazione
+├── setup.sh              # 🆕 Setup automatico completo
+├── ssl/                   # Script generazione certificati
+├── scripts/               # Script R per demo e setup
+├── sitea/, siteb/        # Dati di esempio
+└── README.md             # Questa guida
+```
+
+## 🤝 Contribuire
+
+Pull request benvenute! Per modifiche importanti, apri prima un issue.
+
+## 📄 Licenza
+
+[MIT](LICENSE)
+
+## 📞 Supporto
+
+- **Issues GitHub**: Problemi e domande
+- **Docker**: `docker compose logs` per debug
+- **DataSHIELD**: [Documentazione ufficiale](https://www.datashield.org/help)
+
+**Tips per il debug:**
+- `docker compose ps` → Stato servizi
+- `docker compose logs [servizio]` → Log specifici
+- `docker stats` → Uso risorse
 
 ## 🛑 Arresto dell'ambiente
 
