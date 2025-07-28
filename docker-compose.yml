@@ -81,7 +81,7 @@ services:
       OPAL_HTTPS_ONLY: ${OPAL_FORCE_HTTPS:-false}
     volumes:
       - "${PROJECT_HOME}/sitea/opal_home:/srv"
-      - "${PROJECT_HOME}/ssl:/srv/ssl:ro"  # Read-only per sicurezza
+      - "${PROJECT_HOME}/ssl:/srv/ssl"
     networks:
       - sitea_net
     labels:
@@ -159,7 +159,7 @@ services:
       OPAL_HTTPS_ONLY: ${OPAL_FORCE_HTTPS:-false}
     volumes:
       - "${PROJECT_HOME}/siteb/opal_home:/srv"
-      - "${PROJECT_HOME}/ssl:/srv/ssl:ro"  # Read-only per sicurezza
+      - "${PROJECT_HOME}/ssl:/srv/ssl"
     networks:
       - siteb_net
     labels:
