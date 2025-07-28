@@ -64,8 +64,8 @@ services:
       sitea_rock:
         condition: service_healthy
     ports:
-      - "${OPAL_PORT_A:-18880}:8080"        # HTTP
-      - "${OPAL_HTTPS_PORT_A:-18443}:8443"  # HTTPS
+      - "${OPAL_PORT_A:-18880}:8080"
+      - "${OPAL_HTTPS_PORT_A:-18443}:8443"
     environment:
       MONGO_HOST: sitea_mongo
       MONGO_PORT: 27017
@@ -142,8 +142,8 @@ services:
       siteb_rock:
         condition: service_healthy
     ports:
-      - "${OPAL_PORT_B:-28880}:8080"        # HTTP
-      - "${OPAL_HTTPS_PORT_B:-28443}:8443"  # HTTPS
+      - "${OPAL_PORT_B:-28880}:8080"
+      - "${OPAL_HTTPS_PORT_B:-28443}:8443"
     environment:
       MONGO_HOST: siteb_mongo
       MONGO_PORT: 27017
@@ -190,7 +190,7 @@ services:
       SSL_KEYSTORE_PASSWORD: ${SSL_KEYSTORE_PASSWORD:-opalssl}
     volumes:
       - "${PROJECT_HOME}/client:/home/rstudio"
-      - "${PROJECT_HOME}/ssl:/home/rstudio/ssl:ro"  # Certificati accessibili al client R
+      - "${PROJECT_HOME}/ssl:/home/rstudio/ssl"
     networks:
       - sitea_net
       - siteb_net
