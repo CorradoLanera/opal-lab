@@ -1,6 +1,7 @@
 #!/usr/bin/env Rscript
 #
 # Demo di analisi federata con DataSHIELD.
+# Ottimizzato per client locali (R/RStudio installati localmente)
 # Supporta sia HTTP che HTTPS con fallback automatico
 #
 
@@ -14,47 +15,52 @@ suppressPackageStartupMessages({
 
 ui_info("Demo Analisi Federata DataSHIELD")
 
-# Configurazione URL con fallback automatico
+# Configurazione URL per client locali
 get_opal_urls <- function() {
-  # Prova prima le variabili d'ambiente (preferite)
-  sitea_url <- Sys.getenv("SITEA_OPAL_URL", "")
-  siteb_url <- Sys.getenv("SITEB_OPAL_URL", "")
-
-  # Se non configurate, usa HTTPS di default
-  if (sitea_url == "") sitea_url <- "https://sitea_opal:8443"
-  if (siteb_url == "") siteb_url <- "https://siteb_opal:8443"
+  # URL per client locali (default localhost)
+  sitea_url <- Sys.getenv("SITEA_OPAL_URL", "https://localhost:18443")
+  siteb_url <- Sys.getenv("SITEB_OPAL_URL", "https://localhost:28443")
 
   list(sitea = sitea_url, siteb = siteb_url)
 }
 
 # Funzione per testare connessione e fare fallback HTTP se necessario
 test_and_fallback <- function(https_url) {
-  http_url <- gsub("https://", "http://", gsub(":8443", ":8080", https_url))
+  # Converti da HTTPS 18443/28443 a HTTP 18880/28880
+  http_url <- gsub("https://", "http://", https_url)
+  http_url <- gsub(":18443", ":18880", http_url)
+  http_url <- gsub(":28443", ":28880", http_url)
 
   ui_todo("Test connessione a {https_url}...")
 
   # Test HTTPS
-  tryCatch({
-    response <- httr::GET(https_url, httr::config(ssl_verifypeer = FALSE, ssl_verifyhost = FALSE))
-    if (httr::status_code(response) < 400) {
-      ui_done("HTTPS funzionante")
-      return(list(url = https_url, options = "ssl_verifyhost=0,ssl_verifypeer=0"))
+  tryCatch(
+    {
+      response <- httr::GET(https_url, httr::config(ssl_verifypeer = FALSE))
+      if (httr::status_code(response) < 400) {
+        ui_done("HTTPS funzionante")
+        return(list(url = https_url, ssl_verify = FALSE)) # Changed this
+      }
+    },
+    error = function(e) {
+      ui_info("HTTPS non disponibile, provo HTTP...")
     }
-  }, error = function(e) {
-    ui_info("HTTPS non disponibile, provo HTTP...")
-  })
+  )
 
   # Fallback HTTP
-  tryCatch({
-    response <- httr::GET(http_url)
-    if (httr::status_code(response) < 400) {
-      ui_done("HTTP funzionante")
-      return(list(url = http_url, options = ""))
+  tryCatch(
+    {
+      response <- httr::GET(http_url)
+      if (httr::status_code(response) < 400) {
+        ui_done("HTTP funzionante")
+        return(list(url = http_url, ssl_verify = TRUE)) # Changed this
+      }
+    },
+    error = function(e) {
+      ui_oops("Nessuna connessione disponibile")
+      return(NULL)
     }
-  }, error = function(e) {
-    ui_oops("Nessuna connessione disponibile")
-    return(NULL)
-  })
+  )
 }
 
 # Configura connessioni con fallback automatico
@@ -78,7 +84,6 @@ login_data <- data.frame(
     Sys.getenv("SITEB_OPAL_ADMIN_PWD")
   ),
   table = c("LAB.dataset", "LAB.dataset"),
-  options = c(sitea_config$options, siteb_config$options),
   stringsAsFactors = FALSE
 )
 
@@ -122,7 +127,7 @@ tryCatch(
       bmi_stats <- ds.mean("D$bmi", type = "combine")
       ui_info("BMI medio: {round(bmi_stats$Global.Mean[1], 2)}")
     }
-    ui_info("- I servizi Opal siano avviati (docker compose ps)")
+
     if ("gender" %in% structure_info$siteA) {
       gender_table <- ds.table("D$gender", type = "combine")
       ui_info("Distribuzione genere:")
@@ -180,7 +185,7 @@ tryCatch(
   error = function(e) {
     ui_oops("Errore durante l'analisi: {e$message}")
     ui_info("Verifica che:")
-    ui_info("- I servizi Opal siano avviati")
+    ui_info("- I servizi Opal siano avviati (docker compose ps)")
     ui_info("- I dati siano stati importati correttamente")
     ui_info("- Le credenziali nel file .env siano corrette")
 

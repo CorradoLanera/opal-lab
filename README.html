@@ -82,11 +82,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="opal-lab" class="level1">
 <h1>🔬 opal-lab</h1>
-<p><a href="https://docs.docker.com/compose/"><img src="https://img.shields.io/badge/docker--compose-supported-blue.svg?logo=docker" class="img-fluid" alt="Docker Compose"></a> <a href="https://www.datashield.org/"><img src="https://img.shields.io/badge/DataSHIELD-compatible-green.svg?logo=r" class="img-fluid" alt="DataSHIELD"></a> <a href="https://www.obiba.org/pages/products/opal/"><img src="https://img.shields.io/badge/Opal-4.x-orange.svg?logo=obiba" class="img-fluid" alt="Opal"></a> <a href="https://rstudio.com/"><img src="https://img.shields.io/badge/RStudio-ready-blue.svg?logo=rstudio" class="img-fluid" alt="RStudio"></a> <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" class="img-fluid" alt="License: MIT"></a> <a href="https://docker.com/"><img src="https://img.shields.io/badge/platform-linux%20%7C%20windows%20%7C%20macOS-lightgrey.svg?logo=docker" class="img-fluid" alt="Platform"></a></p>
+<p><a href="https://docs.docker.com/compose/"><img src="https://img.shields.io/badge/docker--compose-supported-blue.svg?logo=docker" class="img-fluid" alt="Docker Compose"></a> <a href="https://www.datashield.org/"><img src="https://img.shields.io/badge/DataSHIELD-compatible-green.svg?logo=r" class="img-fluid" alt="DataSHIELD"></a> <a href="https://www.obiba.org/pages/products/opal/"><img src="https://img.shields.io/badge/Opal-4.x-orange.svg?logo=obiba" class="img-fluid" alt="Opal"></a> <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" class="img-fluid" alt="License: MIT"></a> <a href="https://docker.com/"><img src="https://img.shields.io/badge/platform-linux%20%7C%20windows%20%7C%20macOS-lightgrey.svg?logo=docker" class="img-fluid" alt="Platform"></a></p>
 <blockquote class="blockquote">
 <p><strong>Ambiente completo Docker per sperimentare l’analisi federata con DataSHIELD</strong></p>
 </blockquote>
-<p><strong>opal-lab</strong> è un ambiente di sviluppo containerizzato che simula una rete di analisi federata con DataSHIELD. Include due server Opal indipendenti (Site A e Site B) e un client RStudio preconfigurato per eseguire analisi distribuite sui dati senza mai spostarli dai siti originali.</p>
+<p><strong>opal-lab</strong> è un ambiente di sviluppo containerizzato che simula una rete di analisi federata con DataSHIELD. Include due server Opal indipendenti (Site A e Site B), ciascuno con i loro server Rock e MongoDB, che puoi interrogare dalla tua installazione locale di R/RStudio/Positron per eseguire analisi distribuite sui dati senza mai spostarli dai siti originali.</p>
 <p><strong>Caratteristiche principali:</strong></p>
 <ul>
 <li>🚀 <strong>Setup automatico</strong> in 3 comandi</li>
@@ -95,6 +95,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>🐳 <strong>Completamente containerizzato</strong> con Docker</li>
 <li>📝 <strong>Script R pronti</strong> per iniziare subito</li>
 <li>🔧 <strong>Debug tools</strong> integrati</li>
+<li>💻 <strong>Usa il tuo ambiente locale</strong> - nessun browser necessario</li>
 </ul>
 <p>Perfetto per ricercatori, data scientist e sviluppatori che vogliono esplorare l’analisi federata senza complesse configurazioni di rete.</p>
 <section id="requisiti" class="level2">
@@ -104,6 +105,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <ul>
 <li><strong>Docker Desktop</strong> (4 GB RAM disponibili)</li>
 <li><strong>Git</strong></li>
+<li><strong>R 4.0+</strong> (installazione locale)</li>
+<li><strong>RStudio/Positron</strong> (opzionale ma raccomandato)</li>
 </ul>
 </section>
 <section id="linuxmacos" class="level3">
@@ -121,9 +124,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p><strong>Verifica installazione:</strong></p>
 <p>Linux/macOS:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> <span class="at">--version</span> <span class="kw">&amp;&amp;</span> <span class="ex">docker</span> compose version</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> <span class="at">--version</span> <span class="kw">&amp;&amp;</span> <span class="ex">docker</span> compose version</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">R</span> <span class="at">--version</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Windows (PowerShell):</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode powershell code-with-copy"><code class="sourceCode powershell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>docker <span class="op">--</span>version<span class="op">;</span> docker compose version</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode powershell code-with-copy"><code class="sourceCode powershell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>docker <span class="op">--</span>version<span class="op">;</span> docker compose version</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">R</span> <span class="op">--</span>version</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 </section>
 <section id="setup-rapido-3-comandi" class="level2">
@@ -137,7 +142,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Setup automatico (crea .env, directory, certificati SSL)</span></span>
 <span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="ex">./setup.sh</span></span>
 <span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Avvia i servizi</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Avvia i servizi Opal</span></span>
 <span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> compose up <span class="at">-d</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="windows-powershell" class="level3">
@@ -149,11 +154,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Setup automatico (crea .env, directory, certificati SSL)</span></span>
 <span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="op">.</span>\setup<span class="op">.</span><span class="fu">ps1</span></span>
 <span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Avvia i servizi</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Avvia i servizi Opal</span></span>
 <span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>docker compose up <span class="op">-</span>d</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Dopo 2-3 minuti avrai tutto pronto:</p>
+<p>Dopo 2-3 minuti avrai i server Opal pronti:</p>
 <ul>
-<li><strong>RStudio</strong>: http://localhost:8787</li>
 <li><strong>Site A</strong>: https://localhost:18443 (HTTPS) o http://localhost:18880 (HTTP)</li>
 <li><strong>Site B</strong>: https://localhost:28443 (HTTPS) o http://localhost:28880 (HTTP)</li>
 </ul>
@@ -164,7 +168,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <pre><code>$PROJECT_HOME/
 ├── sitea/opal_home/data/dataset.csv
 ├── siteb/opal_home/data/dataset.csv
-├── client/  (script R)
 └── ssl/     (certificati SSL)</code></pre>
 </section>
 </section>
@@ -183,10 +186,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 PROJECT_HOME=C:/opal-lab        # Windows
 PROJECT_HOME=/opt/opal-lab      # Linux/macOS
 
-# Password (OBBLIGATORIE - sostituisci i placeholder!)
+# Password Opal (OBBLIGATORIE - sostituisci i placeholder!)
 SITEA_OPAL_ADMIN_PWD=password123
 SITEB_OPAL_ADMIN_PWD=password456
-CLIENT_VERSE_RSTUDIO_PWD=rstudio123
 
 # SSL (opzionale)
 OPAL_FORCE_HTTPS=false  # true = solo HTTPS, false = HTTP + HTTPS</code></pre>
@@ -202,7 +204,10 @@ OPAL_FORCE_HTTPS=false  # true = solo HTTPS, false = HTTP + HTTPS</code></pre>
 <span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> compose down <span class="at">-v</span></span>
 <span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Riavvia tutto</span></span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> compose restart</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> compose restart</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Verifica stato servizi</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> compose ps</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="note-sslhttps" class="level2">
 <h2 class="anchored" data-anchor-id="note-sslhttps">🔐 Note SSL/HTTPS</h2>
@@ -214,20 +219,32 @@ OPAL_FORCE_HTTPS=false  # true = solo HTTPS, false = HTTP + HTTPS</code></pre>
 </ul>
 <p>Per <strong>produzione</strong> usa certificati CA verificati e credenziali sicure.</p>
 </section>
-<section id="analisi-dati-con-rstudio" class="level2">
-<h2 class="anchored" data-anchor-id="analisi-dati-con-rstudio">📊 Analisi dati con RStudio</h2>
-<section id="procedura-automatica-raccomandato" class="level3">
-<h3 class="anchored" data-anchor-id="procedura-automatica-raccomandato">Procedura automatica (raccomandato)</h3>
+<section id="analisi-dati-con-r-locale" class="level2">
+<h2 class="anchored" data-anchor-id="analisi-dati-con-r-locale">📊 Analisi dati con R locale</h2>
+<section id="setup-iniziale-una-tantum" class="level3">
+<h3 class="anchored" data-anchor-id="setup-iniziale-una-tantum">Setup iniziale (una tantum)</h3>
 <ol type="1">
-<li>Vai su http://localhost:8787</li>
-<li>Login: <code>rstudio</code> / password dal <code>.env</code></li>
-<li>Esegui in sequenza:</li>
+<li><strong>Installa i pacchetti DataSHIELD</strong> nel tuo R locale:</li>
 </ol>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Installa pacchetti necessari</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"install-packages.R"</span>)</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Importa dati di esempio (HTTP/HTTPS automatico)</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"setup-demo-data.R"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Nel tuo R/RStudio/Positron locale</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"scripts/install-packages.R"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<ol start="2" type="1">
+<li><strong>Configura le variabili d’ambiente</strong> (opzionale):</li>
+</ol>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Crea/modifica il file .Renviron nella tua home directory</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">Sys.setenv</span>(<span class="at">SITEA_OPAL_ADMIN_PWD =</span> <span class="st">"tua-password-sitea"</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="fu">Sys.setenv</span>(<span class="at">SITEB_OPAL_ADMIN_PWD =</span> <span class="st">"tua-password-siteb"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<ol start="3" type="1">
+<li><strong>Esegui gli script di setup</strong>:</li>
+</ol>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Importa dati di esempio nei server Opal</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"scripts/setup-demo-data.R"</span>)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Test connessioni</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"scripts/test-connection.R"</span>)</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Analisi di esempio</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"scripts/demo-analysis.R"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 </section>
 <section id="contribuire" class="level2">

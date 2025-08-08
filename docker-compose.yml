@@ -41,7 +41,7 @@ services:
     container_name: opal-lab-sitea-rock
     restart: unless-stopped
     environment:
-      ROCK_ADMINISTRATOR_PASSWORD: ${SITEA_ROCK_ADMIN_PWD:-rockadmin}
+      ROCK_ADMINISTRATOR_PASSWORD: ${SITEA_ROCK_ADMIN_PWD}
     networks:
       - sitea_net
     labels:
@@ -71,11 +71,12 @@ services:
       MONGO_PORT: 27017
       ROCK_HOSTS: sitea_rock:8085
       OPAL_ADMINISTRATOR_PASSWORD: ${SITEA_OPAL_ADMIN_PWD}
+      ROCK_ADMINISTRATOR_PASSWORD: ${SITEA_ROCK_ADMIN_PWD}
       JAVA_OPTS: "-Xmx2g"
       # Configurazione SSL condizionale
       OPAL_HTTPS_PORT: 8443
       OPAL_SSL_KEYSTORE_FILE: /srv/ssl/sitea-keystore.p12
-      OPAL_SSL_KEYSTORE_PASSWORD: ${SSL_KEYSTORE_PASSWORD:-opalssl}
+      OPAL_SSL_KEYSTORE_PASSWORD: ${SSL_KEYSTORE_PASSWORD}
       OPAL_SSL_KEYSTORE_TYPE: PKCS12
       # NON forza HTTPS - permette anche HTTP per backward compatibility
       OPAL_HTTPS_ONLY: ${OPAL_FORCE_HTTPS:-false}
@@ -119,7 +120,7 @@ services:
     container_name: opal-lab-siteb-rock
     restart: unless-stopped
     environment:
-      ROCK_ADMINISTRATOR_PASSWORD: ${SITEB_ROCK_ADMIN_PWD:-rockadmin}
+      ROCK_ADMINISTRATOR_PASSWORD: ${SITEB_ROCK_ADMIN_PWD}
     networks:
       - siteb_net
     labels:
@@ -149,11 +150,12 @@ services:
       MONGO_PORT: 27017
       ROCK_HOSTS: siteb_rock:8085
       OPAL_ADMINISTRATOR_PASSWORD: ${SITEB_OPAL_ADMIN_PWD}
+      ROCK_ADMINISTRATOR_PASSWORD: ${SITEB_ROCK_ADMIN_PWD}
       JAVA_OPTS: "-Xmx2g"
       # Configurazione SSL condizionale
       OPAL_HTTPS_PORT: 8443
       OPAL_SSL_KEYSTORE_FILE: /srv/ssl/siteb-keystore.p12
-      OPAL_SSL_KEYSTORE_PASSWORD: ${SSL_KEYSTORE_PASSWORD:-opalssl}
+      OPAL_SSL_KEYSTORE_PASSWORD: ${SSL_KEYSTORE_PASSWORD}
       OPAL_SSL_KEYSTORE_TYPE: PKCS12
       # NON forza HTTPS - permette anche HTTP per backward compatibility
       OPAL_HTTPS_ONLY: ${OPAL_FORCE_HTTPS:-false}
@@ -172,34 +174,3 @@ services:
       timeout: 15s
       retries: 5
       start_period: 120s
-
-  ############### CLIENT ###############
-  ds_client:
-    image: rocker/verse:latest
-    container_name: opal-lab-rstudio-client
-    restart: unless-stopped
-    ports:
-      - "${RSTUDIO_PORT:-8787}:8787"
-    environment:
-      PASSWORD: ${CLIENT_VERSE_RSTUDIO_PWD}
-      DISABLE_AUTH: false
-      ROOT: true
-      # Variabili d'ambiente per R client SSL
-      SITEA_OPAL_ADMIN_PWD: ${SITEA_OPAL_ADMIN_PWD}
-      SITEB_OPAL_ADMIN_PWD: ${SITEB_OPAL_ADMIN_PWD}
-      SSL_KEYSTORE_PASSWORD: ${SSL_KEYSTORE_PASSWORD:-opalssl}
-    volumes:
-      - "${PROJECT_HOME}/client:/home/rstudio"
-      - "${PROJECT_HOME}/ssl:/home/rstudio/ssl"
-    networks:
-      - sitea_net
-      - siteb_net
-    labels:
-      - "opal-lab.service=client"
-      - "opal-lab.component=rstudio"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8787/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
