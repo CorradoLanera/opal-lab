@@ -42,6 +42,10 @@ services:
     restart: unless-stopped
     environment:
       ROCK_ADMINISTRATOR_PASSWORD: ${SITEA_ROCK_ADMIN_PWD}
+      ROCK_USER_NAME: ${SITEA_ROCK_USER_NAME}
+      ROCK_USER_PASSWORD: ${SITEA_ROCK_USER_PWD}
+      ROCK_ID: sitea-rock
+      ROCK_CLUSTER: default
     networks:
       - sitea_net
     labels:
@@ -70,8 +74,16 @@ services:
       MONGO_HOST: sitea_mongo
       MONGO_PORT: 27017
       ROCK_HOSTS: sitea_rock:8085
+      APPS_DISCOVERY_ROCK_HOSTS: sitea_rock:8085
       OPAL_ADMINISTRATOR_PASSWORD: ${SITEA_OPAL_ADMIN_PWD}
+      ROCK_ADMINISTRATOR_USER: administrator
       ROCK_ADMINISTRATOR_PASSWORD: ${SITEA_ROCK_ADMIN_PWD}
+      # Manager credentials are optional; manager role is not used in this demo
+      ROCK_MANAGER_USER: manager
+      ROCK_MANAGER_PASSWORD: ${SITEA_ROCK_ADMIN_PWD}
+      # Regular Rock user credentials used for DataSHIELD operations
+      ROCK_USER_USER: ${SITEA_ROCK_USER_NAME}
+      ROCK_USER_PASSWORD: ${SITEA_ROCK_USER_PWD}
       JAVA_OPTS: "-Xmx2g"
       # Configurazione SSL condizionale
       OPAL_HTTPS_PORT: 8443
@@ -121,6 +133,10 @@ services:
     restart: unless-stopped
     environment:
       ROCK_ADMINISTRATOR_PASSWORD: ${SITEB_ROCK_ADMIN_PWD}
+      ROCK_USER_NAME: ${SITEB_ROCK_USER_NAME}
+      ROCK_USER_PASSWORD: ${SITEB_ROCK_USER_PWD}
+      ROCK_ID: siteb-rock
+      ROCK_CLUSTER: default
     networks:
       - siteb_net
     labels:
@@ -149,15 +165,21 @@ services:
       MONGO_HOST: siteb_mongo
       MONGO_PORT: 27017
       ROCK_HOSTS: siteb_rock:8085
+      APPS_DISCOVERY_ROCK_HOSTS: siteb_rock:8085
       OPAL_ADMINISTRATOR_PASSWORD: ${SITEB_OPAL_ADMIN_PWD}
+      ROCK_ADMINISTRATOR_USER: administrator
       ROCK_ADMINISTRATOR_PASSWORD: ${SITEB_ROCK_ADMIN_PWD}
+      # Manager credentials are optional; manager role is not used in this demo
+      ROCK_MANAGER_USER: manager
+      ROCK_MANAGER_PASSWORD: ${SITEB_ROCK_ADMIN_PWD}
+      # Regular Rock user credentials used for DataSHIELD operations
+      ROCK_USER_USER: ${SITEB_ROCK_USER_NAME}
+      ROCK_USER_PASSWORD: ${SITEB_ROCK_USER_PWD}
       JAVA_OPTS: "-Xmx2g"
-      # Configurazione SSL condizionale
       OPAL_HTTPS_PORT: 8443
       OPAL_SSL_KEYSTORE_FILE: /srv/ssl/siteb-keystore.p12
       OPAL_SSL_KEYSTORE_PASSWORD: ${SSL_KEYSTORE_PASSWORD}
       OPAL_SSL_KEYSTORE_TYPE: PKCS12
-      # NON forza HTTPS - permette anche HTTP per backward compatibility
       OPAL_HTTPS_ONLY: ${OPAL_FORCE_HTTPS:-false}
     volumes:
       - "${PROJECT_HOME}/siteb/opal_home:/srv"
@@ -168,7 +190,6 @@ services:
       - "opal-lab.service=opal"
       - "opal-lab.site=siteb"
     healthcheck:
-      # Controlla prima HTTPS, poi HTTP come fallback
       test: ["CMD", "sh", "-c", "curl -f -k https://localhost:8443/ || curl -f http://localhost:8080/"]
       interval: 30s
       timeout: 15s
