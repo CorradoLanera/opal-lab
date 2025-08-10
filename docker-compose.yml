@@ -42,6 +42,8 @@ services:
     restart: unless-stopped
     environment:
       ROCK_ADMINISTRATOR_PASSWORD: ${SITEA_ROCK_ADMIN_PWD}
+      ROCK_MANAGER_NAME: manager
+      ROCK_MANAGER_PASSWORD: ${SITEA_ROCK_ADMIN_PWD}
       ROCK_USER_NAME: ${SITEA_ROCK_USER_NAME}
       ROCK_USER_PASSWORD: ${SITEA_ROCK_USER_PWD}
       ROCK_ID: sitea-rock
@@ -135,6 +137,8 @@ services:
       ROCK_ADMINISTRATOR_PASSWORD: ${SITEB_ROCK_ADMIN_PWD}
       ROCK_USER_NAME: ${SITEB_ROCK_USER_NAME}
       ROCK_USER_PASSWORD: ${SITEB_ROCK_USER_PWD}
+      ROCK_MANAGER_NAME: manager
+      ROCK_MANAGER_PASSWORD: ${SITEB_ROCK_ADMIN_PWD}
       ROCK_ID: siteb-rock
       ROCK_CLUSTER: default
     networks:

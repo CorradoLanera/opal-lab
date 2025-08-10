@@ -1,9 +1,4 @@
 #!/usr/bin/env Rscript
-#
-# Demo di analisi federata con DataSHIELD.
-# Ottimizzato per client locali (R/RStudio installati localmente)
-# Supporta sia HTTP che HTTPS con fallback automatico
-#
 
 suppressPackageStartupMessages({
   library(DSI)
@@ -15,31 +10,25 @@ suppressPackageStartupMessages({
 
 ui_info("Demo Analisi Federata DataSHIELD")
 
-# Configurazione URL per client locali
 get_opal_urls <- function() {
-  # URL per client locali (default localhost)
-  sitea_url <- Sys.getenv("SITEA_OPAL_URL", "https://localhost:18443")
-  siteb_url <- Sys.getenv("SITEB_OPAL_URL", "https://localhost:28443")
-
-  list(sitea = sitea_url, siteb = siteb_url)
+  list(
+    sitea = Sys.getenv("SITEA_OPAL_URL", "https://localhost:18443"),
+    siteb = Sys.getenv("SITEB_OPAL_URL", "https://localhost:28443")
+  )
 }
 
-# Funzione per testare connessione e fare fallback HTTP se necessario
 test_and_fallback <- function(https_url) {
-  # Converti da HTTPS 18443/28443 a HTTP 18880/28880
   http_url <- gsub("https://", "http://", https_url)
-  http_url <- gsub(":18443", ":18880", http_url)
-  http_url <- gsub(":28443", ":28880", http_url)
+  http_url <- gsub(":(\\d{2})443", ":\\1880", http_url)
 
   ui_todo("Test connessione a {https_url}...")
 
-  # Test HTTPS
   tryCatch(
     {
       response <- httr::GET(https_url, httr::config(ssl_verifypeer = FALSE))
       if (httr::status_code(response) < 400) {
         ui_done("HTTPS funzionante")
-        return(list(url = https_url, ssl_verify = FALSE)) # Changed this
+        return(list(url = https_url, ssl_verify = FALSE))
       }
     },
     error = function(e) {
@@ -47,13 +36,12 @@ test_and_fallback <- function(https_url) {
     }
   )
 
-  # Fallback HTTP
   tryCatch(
     {
       response <- httr::GET(http_url)
       if (httr::status_code(response) < 400) {
         ui_done("HTTP funzionante")
-        return(list(url = http_url, ssl_verify = TRUE)) # Changed this
+        return(list(url = http_url))
       }
     },
     error = function(e) {
@@ -63,9 +51,7 @@ test_and_fallback <- function(https_url) {
   )
 }
 
-# Configura connessioni con fallback automatico
 urls <- get_opal_urls()
-
 sitea_config <- test_and_fallback(urls$sitea)
 siteb_config <- test_and_fallback(urls$siteb)
 
@@ -84,6 +70,10 @@ login_data <- data.frame(
     Sys.getenv("SITEB_OPAL_ADMIN_PWD")
   ),
   table = c("LAB.dataset", "LAB.dataset"),
+  options = c(
+    "ssl_verifypeer=0",
+    "ssl_verifypeer=0"
+  ),
   stringsAsFactors = FALSE
 )
 
@@ -91,14 +81,17 @@ login_data <- data.frame(
 if (any(login_data$password == "")) {
   ui_oops("Password mancanti nelle variabili d'ambiente")
   ui_info("Verifica che il file .env sia configurato correttamente")
-  stop("Password mancanti")
+  ui_stop("Password mancanti")
 }
 
 tryCatch(
   {
     ## Connessione ai siti ----
     ui_todo("Connessione ai siti DataSHIELD...")
-    conns <- datashield.login(logins = login_data, assign = TRUE)
+    conns <- datashield.login(
+      logins = login_data,
+      assign = TRUE
+    )
     ui_done("Connesso a {length(conns)} siti")
 
     ## Verifica informazioni sui dataset ----
